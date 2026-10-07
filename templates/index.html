@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Task Manager</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .add-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+            color: white;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px;
+            margin-top: 10px;
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+
+        .empty {
+            text-align: center;
+            color: #777;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>📝 Task Manager</h1>
+
+        <div class="input-area">
+
+            <input
+                type="text"
+                id="taskInput"
+                placeholder="Enter a task..."
+            >
+
+            <button
+                class="add-btn"
+                onclick="addTask()">
+                Add
+            </button>
+
+        </div>
+
+        <h2>Tasks</h2>
+
+        <ul id="taskList">
+
+            {% for task in tasks %}
+
+            <li id="task-{{ task.id }}">
+
+                <span>{{ task.name }}</span>
+
+                <button
+                    class="delete-btn"
+                    data-task-id="{{ task.id }}"
+                    onclick="deleteTask(this.dataset.taskId)">
+                    Delete
+                </button>
+
+            </li>
+
+            {% endfor %}
+
+        </ul>
+
+        {% if not tasks %}
+
+        <div class="empty" id="emptyMessage">
+            No tasks yet.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <script>
+
+        async function addTask() {
+
+            const input = document.getElementById("taskInput");
+
+            const taskName = input.value.trim();
+
+            if (!taskName) {
+                alert("Please enter a task.");
+                return;
+            }
+
+            const response = await fetch("/tasks", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    task: taskName
+                })
+
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            input.value = "";
+
+            location.reload();
+        }
+
+
+        async function deleteTask(taskId) {
+
+            const response = await fetch(`/tasks/${taskId}`, {
+
+                method: "DELETE"
+
+            });
+
+            if (!response.ok) {
+                alert("Failed to delete task.");
+                return;
+            }
+
+            location.reload();
+        }
+
+    </script>
+
+</body>
+
+</html>
