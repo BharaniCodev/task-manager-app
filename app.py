@@ -1,87 +1,76 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, Form, Depends, HTTPException, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-
+from starlette.middleware.sessions import SessionMiddleware
 
 app = FastAPI(title="Task Manager")
+app.add_middleware(SessionMiddleware, secret_key="secret-key-change-in-production")
 
 templates = Jinja2Templates(directory="templates")
 
-
 # Temporary task storage
 tasks = []
-
 next_id = 1
 
+# Simple hardcoded credentials
+USERS = {"admin": "password123"}
+
+def get_current_user(request: Request):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=status.HTTP_307_TEMPORARY_REDIRECT, headers={"Location": "/login"})
+    return user
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    return templates.TemplateResponse(request=request, name="login.html")
+
+@app.post("/login")
+def login(request: Request, username: str = Form(...), password: str = Form(...)):
+    if USERS.get(username) == password:
+        request.session["user"] = username
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse(request=request, name="login.html", context={"error": "Invalid credentials"})
+
+@app.post("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-
+def home(request: Request, user: str = Depends(get_current_user)):
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={
-            "tasks": tasks
-        }
+        context={"tasks": tasks, "user": user}
     )
 
-
 @app.post("/tasks")
-async def add_task(request: Request):
-
+async def add_task(request: Request, user: str = Depends(get_current_user)):
     global next_id
-
     data = await request.json()
-
     task_name = data.get("task")
-
     if not task_name:
-        return {
-            "error": "Task cannot be empty"
-        }
-
-    task = {
-        "id": next_id,
-        "name": task_name
-    }
-
+        return {"error": "Task cannot be empty"}
+    task = {"id": next_id, "name": task_name}
     tasks.append(task)
-
     next_id += 1
-
-    return {
-        "message": "Task added",
-        "task": task
-    }
-
+    return {"message": "Task added", "task": task}
 
 @app.put("/tasks/{task_id}")
-async def edit_task(task_id: int, request: Request):
+async def edit_task(task_id: int, request: Request, user: str = Depends(get_current_user)):
     data = await request.json()
     new_name = data.get("task")
-
     if not new_name:
         return {"error": "Task cannot be empty"}
-
     for task in tasks:
         if task["id"] == task_id:
             task["name"] = new_name
             return {"message": "Task updated", "task": task}
-
     return {"error": "Task not found"}
 
-
 @app.delete("/tasks/{task_id}")
-def delete_task(task_id: int):
-
+def delete_task(task_id: int, user: str = Depends(get_current_user)):
     global tasks
-
-    tasks = [
-        task
-        for task in tasks
-        if task["id"] != task_id
-    ]
-
-    return {
-        "message": "Task deleted"
-    }
+    tasks = [task for task in tasks if task["id"] != task_id]
+    return {"message": "Task deleted"}
