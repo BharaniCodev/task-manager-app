@@ -55,6 +55,22 @@ async def add_task(request: Request):
     }
 
 
+@app.put("/tasks/{task_id}")
+async def edit_task(task_id: int, request: Request):
+    data = await request.json()
+    new_name = data.get("task")
+
+    if not new_name:
+        return {"error": "Task cannot be empty"}
+
+    for task in tasks:
+        if task["id"] == task_id:
+            task["name"] = new_name
+            return {"message": "Task updated", "task": task}
+
+    return {"error": "Task not found"}
+
+
 @app.delete("/tasks/{task_id}")
 def delete_task(task_id: int):
 

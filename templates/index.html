@@ -53,6 +53,12 @@
             color: white;
         }
 
+        .edit-btn {
+            background: #f59e0b;
+            color: white;
+            margin-right: 5px;
+        }
+
         .delete-btn {
             background: #dc2626;
             color: white;
@@ -113,12 +119,21 @@
 
                 <span>{{ task.name }}</span>
 
-                <button
-                    class="delete-btn"
-                    data-task-id="{{ task.id }}"
-                    onclick="deleteTask(this.dataset.taskId)">
-                    Delete
-                </button>
+                <div>
+                    <button
+                        class="edit-btn"
+                        data-task-id="{{ task.id }}"
+                        data-task-name="{{ task.name }}"
+                        onclick="editTask(this.dataset.taskId, this.dataset.taskName)">
+                        Edit
+                    </button>
+                    <button
+                        class="delete-btn"
+                        data-task-id="{{ task.id }}"
+                        onclick="deleteTask(this.dataset.taskId)">
+                        Delete
+                    </button>
+                </div>
 
             </li>
 
@@ -172,6 +187,31 @@
             }
 
             input.value = "";
+
+            location.reload();
+        }
+
+        async function editTask(taskId, currentName) {
+            const newName = prompt("Edit task:", currentName);
+            
+            if (newName === null || newName.trim() === "") {
+                return;
+            }
+
+            const response = await fetch(`/tasks/${taskId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    task: newName.trim()
+                })
+            });
+
+            if (!response.ok) {
+                alert("Failed to update task.");
+                return;
+            }
 
             location.reload();
         }
