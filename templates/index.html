@@ -43,21 +43,22 @@
         }
 
         button {
-            padding: 12px 18px;
+            padding: 8px 12px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
+            font-size: 14px;
         }
 
         .add-btn {
             background: #2563eb;
             color: white;
+            padding: 12px 18px;
         }
 
         .edit-btn {
             background: #f59e0b;
             color: white;
-            margin-right: 5px;
         }
 
         .delete-btn {
@@ -78,6 +79,11 @@
             margin-top: 10px;
             background: #f1f5f9;
             border-radius: 6px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
         }
 
         .task-info {
@@ -124,7 +130,7 @@
                     <span class="timestamp">{{ task.created_at[:16].replace('T', ' ') }} UTC</span>
                     {% endif %}
                 </div>
-                <div>
+                <div class="task-actions">
                     <button class="edit-btn" data-task-id="{{ task.id }}" data-task-name="{{ task.name }}"
                         onclick="editTask(this.dataset.taskId, this.dataset.taskName)">Edit</button>
                     <button class="delete-btn" data-task-id="{{ task.id }}"
