@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from datetime import datetime, timezone
 
 
 app = FastAPI(title="Task Manager")
@@ -42,7 +43,8 @@ async def add_task(request: Request):
 
     task = {
         "id": next_id,
-        "name": task_name
+        "name": task_name,
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
 
     tasks.append(task)

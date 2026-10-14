@@ -79,6 +79,16 @@
             border-radius: 6px;
         }
 
+        .task-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timestamp {
+            font-size: 0.8em;
+            color: #64748b;
+        }
+
         .empty {
             text-align: center;
             color: #777;
@@ -117,7 +127,12 @@
 
             <li id="task-{{ task.id }}">
 
-                <span>{{ task.name }}</span>
+                <div class="task-info">
+                    <span>{{ task.name }}</span>
+                    {% if task.created_at %}
+                    <span class="timestamp">{{ task.created_at[:16].replace('T', ' ') }} UTC</span>
+                    {% endif %}
+                </div>
 
                 <div>
                     <button
