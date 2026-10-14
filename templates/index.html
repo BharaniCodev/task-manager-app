@@ -31,6 +31,7 @@
         .input-area {
             display: flex;
             gap: 10px;
+            margin-bottom: 20px;
         }
 
         input {
@@ -104,152 +105,116 @@
         <h1>📝 My Cloud Task Manager</h1>
 
         <div class="input-area">
+            <input type="text" id="taskInput" placeholder="Enter a task...">
+            <button class="add-btn" onclick="addTask()">Add</button>
+        </div>
 
-            <input
-                type="text"
-                id="taskInput"
-                placeholder="Enter a task..."
-            >
-
-            <button
-                class="add-btn"
-                onclick="addTask()">
-                Add
-            </button>
-
+        <div class="input-area">
+            <input type="text" id="searchInput" placeholder="Search tasks..." onkeyup="filterTasks()">
         </div>
 
         <h2>Tasks</h2>
 
         <ul id="taskList">
-
             {% for task in tasks %}
-
-            <li id="task-{{ task.id }}">
-
+            <li class="task-item" data-name="{{ task.name|lower }}">
                 <div class="task-info">
                     <span>{{ task.name }}</span>
                     {% if task.created_at %}
                     <span class="timestamp">{{ task.created_at[:16].replace('T', ' ') }} UTC</span>
                     {% endif %}
                 </div>
-
                 <div>
-                    <button
-                        class="edit-btn"
-                        data-task-id="{{ task.id }}"
-                        data-task-name="{{ task.name }}"
-                        onclick="editTask(this.dataset.taskId, this.dataset.taskName)">
-                        Edit
-                    </button>
-                    <button
-                        class="delete-btn"
-                        data-task-id="{{ task.id }}"
-                        onclick="deleteTask(this.dataset.taskId)">
-                        Delete
-                    </button>
+                    <button class="edit-btn" data-task-id="{{ task.id }}" data-task-name="{{ task.name }}"
+                        onclick="editTask(this.dataset.taskId, this.dataset.taskName)">Edit</button>
+                    <button class="delete-btn" data-task-id="{{ task.id }}"
+                        onclick="deleteTask(this.dataset.taskId)">Delete</button>
                 </div>
-
             </li>
-
             {% endfor %}
-
         </ul>
 
-        {% if not tasks %}
-
-        <div class="empty" id="emptyMessage">
+        <div class="empty" id="emptyMessage" style="display: {% if tasks %}none{% else %}block{% endif %};">
             No tasks yet.
         </div>
-
-        {% endif %}
+        
+        <div class="empty" id="noMatchMessage" style="display: none;">
+            No tasks match your search.
+        </div>
 
     </div>
 
-
     <script>
+        function filterTasks() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            const tasks = document.getElementsByClassName("task-item");
+            const emptyMsg = document.getElementById("emptyMessage");
+            const noMatchMsg = document.getElementById("noMatchMessage");
+            let visibleCount = 0;
+
+            for (let task of tasks) {
+                const name = task.getAttribute("data-name");
+                if (name.includes(query)) {
+                    task.style.display = "flex";
+                    visibleCount++;
+                } else {
+                    task.style.display = "none";
+                }
+            }
+
+            if (tasks.length === 0) {
+                emptyMsg.style.display = "block";
+                noMatchMsg.style.display = "none";
+            } else {
+                emptyMsg.style.display = "none";
+                noMatchMsg.style.display = visibleCount === 0 ? "block" : "none";
+            }
+        }
 
         async function addTask() {
-
             const input = document.getElementById("taskInput");
-
             const taskName = input.value.trim();
-
             if (!taskName) {
                 alert("Please enter a task.");
                 return;
             }
-
             const response = await fetch("/tasks", {
-
                 method: "POST",
-
-                headers: {
-                    "Content-Type": "application/json"
-                },
-
-                body: JSON.stringify({
-                    task: taskName
-                })
-
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ task: taskName })
             });
-
             const data = await response.json();
-
             if (data.error) {
                 alert(data.error);
                 return;
             }
-
             input.value = "";
-
             location.reload();
         }
 
         async function editTask(taskId, currentName) {
             const newName = prompt("Edit task:", currentName);
-            
-            if (newName === null || newName.trim() === "") {
-                return;
-            }
-
+            if (newName === null || newName.trim() === "") return;
             const response = await fetch(`/tasks/${taskId}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    task: newName.trim()
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ task: newName.trim() })
             });
-
             if (!response.ok) {
                 alert("Failed to update task.");
                 return;
             }
-
             location.reload();
         }
 
-
         async function deleteTask(taskId) {
-
-            const response = await fetch(`/tasks/${taskId}`, {
-
-                method: "DELETE"
-
-            });
-
+            const response = await fetch(`/tasks/${taskId}`, { method: "DELETE" });
             if (!response.ok) {
                 alert("Failed to delete task.");
                 return;
             }
-
             location.reload();
         }
-
     </script>
-
 </body>
-
 </html>
