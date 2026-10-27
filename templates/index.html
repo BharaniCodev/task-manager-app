@@ -8,24 +8,52 @@
     <title>Task Manager</title>
 
     <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --container-bg: white;
+            --text-color: #333;
+            --input-border: #ccc;
+            --li-bg: #f1f5f9;
+            --timestamp-color: #64748b;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --input-border: #444;
+            --li-bg: #3d3d3d;
+            --timestamp-color: #aaa;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            background: #f4f6f8;
+            background: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 40px;
+            transition: background 0.3s, color 0.3s;
         }
 
         .container {
             max-width: 700px;
             margin: auto;
-            background: white;
+            background: var(--container-bg);
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        h1 {
-            text-align: center;
+        h1, h2 { color: var(--text-color); }
+
+        .theme-toggle {
+            float: right;
+            padding: 8px 12px;
+            cursor: pointer;
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 6px;
         }
 
         .input-area {
@@ -38,8 +66,10 @@
             flex: 1;
             padding: 12px;
             font-size: 16px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
             border-radius: 6px;
+            background: var(--container-bg);
+            color: var(--text-color);
         }
 
         button {
@@ -50,26 +80,11 @@
             font-size: 14px;
         }
 
-        .add-btn {
-            background: #2563eb;
-            color: white;
-            padding: 12px 18px;
-        }
+        .add-btn { background: #2563eb; color: white; padding: 12px 18px; }
+        .edit-btn { background: #f59e0b; color: white; }
+        .delete-btn { background: #dc2626; color: white; }
 
-        .edit-btn {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .delete-btn {
-            background: #dc2626;
-            color: white;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-        }
+        ul { list-style: none; padding: 0; }
 
         li {
             display: flex;
@@ -77,37 +92,21 @@
             align-items: center;
             padding: 14px;
             margin-top: 10px;
-            background: #f1f5f9;
+            background: var(--li-bg);
             border-radius: 6px;
         }
 
-        .task-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .task-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .timestamp {
-            font-size: 0.8em;
-            color: #64748b;
-        }
-
-        .empty {
-            text-align: center;
-            color: #777;
-            margin-top: 20px;
-        }
+        .task-actions { display: flex; gap: 8px; }
+        .task-info { display: flex; flex-direction: column; }
+        .timestamp { font-size: 0.8em; color: var(--timestamp-color); }
+        .empty { text-align: center; color: #777; margin-top: 20px; }
     </style>
 </head>
 
 <body>
 
     <div class="container">
-
+        <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
         <h1>📝 My Cloud Task Manager</h1>
 
         <div class="input-area">
@@ -147,10 +146,20 @@
         <div class="empty" id="noMatchMessage" style="display: none;">
             No tasks match your search.
         </div>
-
     </div>
 
     <script>
+        // Theme handling
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+
+        function toggleTheme() {
+            let theme = document.documentElement.getAttribute('data-theme');
+            let newTheme = theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
         function filterTasks() {
             const query = document.getElementById("searchInput").value.toLowerCase();
             const tasks = document.getElementsByClassName("task-item");
