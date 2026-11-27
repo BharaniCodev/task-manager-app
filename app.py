@@ -35,6 +35,16 @@ def tasks_page(request: Request):
         }
     )
 
+@app.get("/todo-list", response_class=HTMLResponse)
+def todo_list_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="todo.html",
+        context={
+            "tasks": tasks
+        }
+    )
+
 
 @app.post("/tasks")
 async def add_task(request: Request):

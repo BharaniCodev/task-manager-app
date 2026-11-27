@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List | Task Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #6366f1; --bg: #f8fafc; --card-bg: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0; --danger: #ef4444; --warning: #f59e0b; }
+        [data-theme="dark"] { --bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-main); padding: 60px 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; background: var(--card-bg); padding: 2rem; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .input-group { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: var(--text-main); }
+        button { padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer; }
+        .add-btn { background: var(--primary); color: white; }
+        ul { list-style: none; padding: 0; }
+        li { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .timestamp { font-size: 0.75rem; color: var(--text-muted); display: block; }
+        .completed { text-decoration: line-through; color: var(--text-muted); }
+        .btn-sm { padding: 6px 10px; font-size: 0.75rem; }
+        .delete-btn { background: var(--danger); color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>To-Do List</h1>
+            <a href="/tasks" style="color: var(--primary);">← Back to Tasks</a>
+        </header>
+        <div class="input-group">
+            <input type="text" id="todoInput" placeholder="New task...">
+            <button class="add-btn" onclick="addTodo()">Add</button>
+        </div>
+        <ul id="todoList">
+            {% for task in tasks %}
+            <li>
+                <div>
+                    <input type="checkbox" {% if task.completed %}checked{% endif %} onchange="toggleTodo({{ task.id }})">
+                    <span class="{% if task.completed %}completed{% endif %}">{{ task.name }}</span>
+                    <span class="timestamp">{{ task.created_at[:16].replace('T', ' ') }}</span>
+                </div>
+                <button class="delete-btn btn-sm" onclick="deleteTodo({{ task.id }})">Delete</button>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <script>
+        async function addTodo() {
+            const input = document.getElementById("todoInput");
+            if (!input.value.trim()) return;
+            await fetch("/tasks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ task: input.value.trim() }) });
+            location.reload();
+        }
+        async function toggleTodo(id) { await fetch(`/tasks/${id}/toggle`, { method: "PATCH" }); location.reload(); }
+        async function deleteTodo(id) { await fetch(`/tasks/${id}`, { method: "DELETE" }); location.reload(); }
+    </script>
+</body>
+</html>
