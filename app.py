@@ -17,7 +17,16 @@ next_id = 1
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "tasks": tasks
+        }
+    )
 
+@app.get("/tasks", response_class=HTMLResponse)
+def tasks_page(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -29,39 +38,29 @@ def home(request: Request):
 
 @app.post("/tasks")
 async def add_task(request: Request):
-
     global next_id
-
     data = await request.json()
-
     task_name = data.get("task")
 
     if not task_name:
-        return {
-            "error": "Task cannot be empty"
-        }
+        return {"error": "Task cannot be empty"}
 
     task = {
         "id": next_id,
         "name": task_name,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "completed": False
     }
 
     tasks.append(task)
-
     next_id += 1
-
-    return {
-        "message": "Task added",
-        "task": task
-    }
+    return {"message": "Task added", "task": task}
 
 
 @app.put("/tasks/{task_id}")
 async def edit_task(task_id: int, request: Request):
     data = await request.json()
     new_name = data.get("task")
-
     if not new_name:
         return {"error": "Task cannot be empty"}
 
@@ -69,21 +68,19 @@ async def edit_task(task_id: int, request: Request):
         if task["id"] == task_id:
             task["name"] = new_name
             return {"message": "Task updated", "task": task}
+    return {"error": "Task not found"}
 
+@app.patch("/tasks/{task_id}/toggle")
+async def toggle_task(task_id: int):
+    for task in tasks:
+        if task["id"] == task_id:
+            task["completed"] = not task.get("completed", False)
+            return {"message": "Task status toggled", "task": task}
     return {"error": "Task not found"}
 
 
 @app.delete("/tasks/{task_id}")
 def delete_task(task_id: int):
-
     global tasks
-
-    tasks = [
-        task
-        for task in tasks
-        if task["id"] != task_id
-    ]
-
-    return {
-        "message": "Task deleted"
-    }
+    tasks = [task for task in tasks if task["id"] != task_id]
+    return {"message": "Task deleted"}
